@@ -1,0 +1,148 @@
+---
+title: "Econometrics Homework 1"
+author: "Charles Reid"
+date: "9/14/2020"
+---
+
+
+## What are the names of the people in your study group?
+
+* Nikki
+* Chistopher
+* Musbaou
+* Isabella
+* Mostafa
+* Charles
+
+## Do about 20 experiments where you roll a dice and record whether the result is a 6 or not.
+
+```{r}
+Dice_Experiment <- sample(x = 1:6, size = 20, replace = TRUE)
+
+Dice_Experiment
+
+sum(Dice_Experiment == 6)
+
+plot(table(Dice_Experiment), xlab = 'Dice number', ylab = 'Frequency', main = '20 Rolls of 2 Fair Dice')
+
+```
+
+## “Adjust” the dice. Can you get them to roll a 6 more or less often than would be expected? How would you know - what is “more often”? Can you write some code in R that will simulate a fair roll?
+```{r}
+Unfair_Dice_Experiment <- sample(x = 1:6, size = 20, replace = TRUE, prob = c(0.2, 0.1, 0.1, 0.05, 0.05, 0.5))
+
+Unfair_Dice_Experiment
+
+sum(Unfair_Dice_Experiment == 6)
+
+plot(table(Unfair_Dice_Experiment), xlab = 'Dice number', ylab = 'Frequency', main = '20 Rolls of 2 VERY Un-Fair Dice')
+```
+
+## Replicate the commands given in the lecture notes R Basics for Lecture 1. 
+```{r}
+load("acs2017_ny_data.RData")
+acs2017_ny[1:10,1:7]
+```
+
+
+```{r}
+attach(acs2017_ny)
+```
+
+
+```{r}
+summary(acs2017_ny)
+```
+196585 people are in the data set.
+```{r}
+print(NN_obs <- length(AGE))
+```
+
+
+## Do some simple stats on the PUMS-NY data:
+Summary of Females
+```{r}
+summary(AGE[female ==1])
+```
+Summary of Non-females.
+```{r}
+summary(AGE[!female])
+```
+
+Those notes request that you find average ages for: 
+men 
+```{r}
+mean(AGE[!female == 1])
+```
+
+
+and women after accounting for the top-coding. 
+```{r}
+mean(AGE[female == 1])
+```
+
+
+Tell me something else interesting, that you learned from the data: 
+
+What is surpizing is that women tend to be a little older, about two years older than men.
+```{r}
+summary(EDUC[female == 1])
+summary(EDUC[!female])
+```
+
+Both genders have a mean education of about 15:
+```{r}
+mean(educ_college [female == 1])*100
+mean(educ_college [!female])*100
+```
+
+
+For example about educational attainments in different neighborhoods in the city. Are there surprises for you?:
+```{r}
+summary(EDUC[in_Brooklyn])
+summary(EDUC[in_Queens])
+summary(EDUC[in_Bronx])
+summary(EDUC[in_Manhattan])
+summary(EDUC[in_Westchester])
+```
+People in Brooklyn have the highest level of education.
+
+Differences in means can be complicated. Find the mean return on SP500 index (choose a time period). What is the mean return on days when the previous day’s return was positive? When the previous 2 days were positive? Negative? Now read about “hot hands fallacy” and tell if you think that helps investment strategy. (You might start with this tweet, and read the papers referenced.)
+```{r}
+options(readr.num_columns = 0)
+library(readr)
+S_P_Stock_Price <- read_csv("all_stocks_5yr.csv")
+
+head(S_P_Stock_Price)
+```
+
+Adj close numbers
+```{r}
+S_P_Stock_Price[1:30, "close"]
+```
+Isolated closing price and
+```{r}
+sp_pricedate <-S_P_Stock_Price[, "date", drop = FALSE]
+sp_pricenew <-S_P_Stock_Price[, "close", drop = FALSE]
+cbind(sp_pricedate,sp_pricenew)
+```
+Calculating Close Returns
+```{r}
+n <-nrow(sp_pricenew)
+sp_returns <- log(sp_pricenew[2:n,1])-log(sp_pricenew[1:(n-1),1])
+returns <- sp_returns*100
+summary(returns)
+```
+
+```{r}
+xdate <- sp_pricedate[2:619040,"date"]
+df1 <- cbind.data.frame(xdate,returns)
+print(df1)
+```
+A hot-hand fallacy occurs when gamblers think that a winning streak is more likely to continue. 
+
+
+
+
+
+
