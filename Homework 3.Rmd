@@ -1,11 +1,11 @@
-# Homework-3-Econometrics
 ---
-## Christopher Tinevra 
-
-Group Members: Isabela Vieira, Akimawe Kadiri, Nicole Kerrison, Mostafa Ragheb, Charles Ree
+title: "Homework 3, Lab 3, Econ B2000"
+author: 'Christopher Tinevra, Group Members: Isabela Vieira, Akimawe Kadiri, Nicole Kerrison, Mostafa Ragheb, Charles Reed'
+date: "10/05/2020"
+output: github_document
 ---
 
-Lab results will be gathered from using a simple k-nn technique to try in classifying people's neighborhoods, there will be multiple runs utilizing different categories.
+Lab results will be gathered from using a simple k-nn technique to try in classifying people's neighborhoods, there will be multiple runs utlizing different categories.
 
 For the first example, this run will follow the variables of household cost anf income total which were provided from the Lab 3 guidelines:
 
@@ -115,3 +115,4 @@ In the third run, the k-nn algorithm gave an output accuracy much higher in comp
 In conclusion, we are using the k-nearest neighbor algorithm to predict the living location of a random individual in our dataset. We first start by restricting our dataset to people living in NY (since pums data reflects the entire state of NY), so we can classify 80% of our data as living in one of the 5 boroughs of NYC. The likeability that a person lives in Brooklyn is 35%, Bronx is 14%, Manhattan is 15%, Queens is 31%. Using that probability distribution and other 2 or more variables of our choice, we try to predict the living location of the remaining 20% of our data.
 
 That prediction is based on the proximity of a random non-classified datapoint (individual) to other classified data points. For example, if the majority of the houses in Manhattan have a very high utility cost, then if a random datapoint has a high utility we assume that household to be located in Manhattan. The level of accuracy we achieve from the second run using variables of Poverty, family size and household income gave us a 61.85% for the first sequence. While the level of accuracy we achieve from the third run using variables of cost of multiple utilities  household income gave us a 79.87% for the first sequence. Therefore, utilizing more information or variables with the k-nn  algorithm from the categories within the dataset can lead to higher accuracy to predict the living location of random individuals. 
+
