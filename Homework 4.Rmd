@@ -1,0 +1,111 @@
+---
+title: "Homework 4, Lab 4, Econ B2000"
+author: 'Charles Reid, Christopher Tinevra, Isabela Vieira, Akimawe Kadiri, Nicole Kerrison, Mostafa Ragheb'
+date: "10/12/2020"
+output: github_document
+---
+
+Lab 4 Results:
+
+Re-run of the original codes provided by the lab 4 initial coding guidelines.
+
+```{r}
+
+attach(acs2017_ny)
+use_varb <- (AGE >= 23) & (AGE <= 62) & (LABFORCE == 2) & (WKSWORK2 > 4) & (UHRSWORK >= 35)
+dat_use <- subset(acs2017_ny,use_varb) 
+detach()
+
+attach(dat_use)
+model_temp1 <- lm(INCWAGE ~ AGE + female + AfAm + Asian + Amindian + race_oth + Hispanic + educ_hs + educ_somecoll + educ_college + educ_advdeg)
+summary(model_temp1)
+
+suppressMessages(require(stargazer))
+stargazer(model_temp1, type = "text")
+
+suppressMessages(require(AER))
+
+NNobs <- length(INCWAGE)
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(INCWAGE ~ jitter(AGE, factor = 2), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph)
+
+to_be_predicted1 <- data.frame(AGE = 25:55, female = 1, AfAm = 0, Asian = 0, Amindian = 1, race_oth = 1, Hispanic = 1, educ_hs = 0, educ_somecoll = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted1$yhat <- predict(model_temp1, newdata = to_be_predicted1)
+
+lines(yhat ~ AGE, data = to_be_predicted1)
+
+detach()
+```
+
+The preliminary results from the above 1st linear regression illustrated a positive correlation between income wages and ages ranging from 25 to 55 while using restriction with the variables of the dataset including focusing on female participants only, restrictions on race (looking at Hispanics, Indian American, and other) and highest education achieve (college).
+
+For the following linear regression, we took into consideration similar variables of the dataset like education level (using advance college as the base education) but modify other variables like age range, and focused on total income and gender. The age range will span from 23 to 62, assuming the average age of college graduates is 23 years old and the average age for retirement is 62 years old in the USA. The main goal of the linear regressions below is to observe whether there is a significant difference between the total income between females and males ranging from ages 23 to 62.
+
+Our null hypothesis for the below linear regressions illustrates no difference for total income between females and males with ages from 23 to 62 years old.
+
+Our alternative hypothesis for the below linear regression illustrates a difference seen between the total income between females and males with ages from 23 to 62 years old.
+
+This 2nd linear regression illustrates the correlation between total income of male advance college graduates ranging from ages 23 to 62 years old. 
+
+``` {r}
+#Dependent Variable = Total Income (INCTOT)
+#Independent Variable = Age, Male population, Education Level (Advanced Degrees)
+model_temp2 <- lm(INCTOT ~ AGE + female + educ_hs + educ_somecoll + educ_college + educ_advdeg)
+summary(model_temp2)
+
+coeftest(model_temp2,vcovHC) #Heteroskedasticity
+
+suppressMessages(require(stargazer))
+stargazer(model_temp2, type = "text")
+
+suppressMessages(require(AER))
+
+NNobs <- length(INCTOT)
+set.seed(12345)
+graph_obs2 <- (runif(NNobs) < 0.1) 
+dat_graph2 <-subset(dat_use,graph_obs2)  
+
+plot(INCTOT ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,200000), data = dat_graph2)
+
+to_be_predicted2 <- data.frame(AGE = 23:62, female = 0, educ_hs = 0 , educ_somecoll = 0, educ_college = 0, educ_advdeg = 1)
+to_be_predicted2$yhat <- predict(model_temp2, newdata = to_be_predicted2)
+
+lines(yhat ~ AGE, data = to_be_predicted2)
+
+detach()
+
+```
+
+This 3rd linear regression illustrates the correlation between total income of advance female college graduates ranging from ages 23 to 62 years old. 
+
+``` {r}
+#Dependent Variable = Total Income (INCTOT)
+#Independent Variable = Age, Female population, Education Level (Advanced Degrees)
+model_temp3 <- lm(INCTOT ~ AGE + female +  educ_hs + educ_somecoll + educ_college + educ_advdeg)
+summary(model_temp3)
+
+coeftest(model_temp3,vcovHC) #Heteroskedasticity
+
+suppressMessages(require(stargazer))
+stargazer(model_temp3, type = "text")
+
+suppressMessages(require(AER))
+
+NNobs <- length(INCTOT)
+set.seed(12345) 
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph3 <-subset(dat_use,graph_obs) 
+plot(INCTOT ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph3)
+
+to_be_predicted3 <- data.frame(AGE = 23:62, female = 1, educ_hs = 0, educ_somecoll = 0, educ_college = 0, educ_advdeg = 1)
+to_be_predicted3$yhat <- predict(model_temp3, newdata = to_be_predicted3)
+
+lines(yhat ~ AGE, data = to_be_predicted3)
+
+detach()
+```
+
+In conclusion, given that the p-value for both linear regression resulted in p-value:< 2.2e-16 which is under the p<0.01 for significant level, thus the smaller the p-value then the stronger evidence in favor of supporting our alternative hypothesis. Therefore, we are rejecting our null hypothesis which states that there is no difference in total income between female and male ranging from ages 23 to 62 years old. Other linear regression using different education levels output similar illustration but the total income will vary depending on the education level where high school graduates and college graduates will earn lower than advance college graduates. Additionally, the linear regressions illustrates a difference in total income when comparing males and females as even with the same level of education, males (from 2nd linear regression) start and earn more money throughout the ages of 23 to 62 in comparison with females (from the 3rd linear regression).
