@@ -1,6 +1,6 @@
 ---
 title: "Homework 5, Lab 5, Econ B2000"
-author: 'Group: Charles Reid, Christopher Tinevra, Group Members: Akimawe Kadiri, Nicole Kerrison, Mostafa Ragheb,'
+author: 'Charles Reid'
 date: "11/3/2020"
 output: github_document
 ---
@@ -9,6 +9,7 @@ library(stargazer)
 library(dplyr)
 library(car)
 ```
+
 
 ## Model 1: Income Based on Education and Ethnicity
 
@@ -28,7 +29,7 @@ educaltion levels:
 
 The sample for this regression includes females with ages ranging from 25 to 65 years old and are currently part of the labor force and are fully employed with (35 hour work week). 
 ```{r}
-load("acs2017_ny_data")
+load("acs2017_ny_data.RData")
 suppressMessages(attach(acs2017_ny))
 use_varb <- (AGE >= 25) & (AGE <= 65) & (LABFORCE == 2) & (WKSWORK2 > 4) & (UHRSWORK >= 35) & (female == 1) 
 dat_use <- subset(acs2017_ny,use_varb)
@@ -38,7 +39,7 @@ detach()
 The model will be using a 2nd degree polynomial of the Age parameter
 ```{r}
 suppressMessages(attach(dat_use))
-model1 <- lm(INCWAGE ~ AGE + + I(AGE^2) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+model1 <- lm(INCWAGE ~ AGE + I(AGE^2) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
 summary(model1)
 suppressMessages(require(stargazer))
 stargazer(model1, type = "text")
@@ -55,6 +56,7 @@ A low R squraed can be useful to decide of the model is the best fit for this da
 From the above regression a predictive model can be drawn using 50% of the data from the 27,192 observations in the data - subset.
 
 ```{r}
+suppressMessages(attach(dat_use))
 NNobs <- length(INCWAGE)
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.5)
@@ -67,6 +69,7 @@ to_be_predicted1$yhat <- predict(model1, newdata = to_be_predicted1)
 
 lines(yhat ~ AGE, data = to_be_predicted1)
 initmax <- max(to_be_predicted1$yhat)
+detach()
 ```
 Within the plot for the predicted values the above code pulls out the peak predicted value of `r format(round(initmax, digits = 2), scientific=FALSE)` for INCWAGES.
 
@@ -110,7 +113,7 @@ summary(model3)
 suppressMessages(require(stargazer))
 stargazer(model3, type = "text")
 detach()
-
+suppressMessages(attach(dat_use))
 NNobs <- length(INCWAGE)
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.1)
@@ -122,6 +125,7 @@ to_be_predicted3 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic =0, 
 to_be_predicted3$yhat <- predict(model3, newdata = to_be_predicted3)
 
 lines(yhat ~ AGE, data = to_be_predicted3)
+detach()
 ```
 
 Model 3 expands on the conditions of model 1 but this time, the regression model is based on log of age and log of age squared. However, there is no reason to use Log on Age or Log on Age^2 given that age is a discrete variable mostly on intervals between 1 to 100. Log of a given number (x) is the exponent to which another fixed number base (b), must be raised, to produce that number (x). Therefore, it is not practical to present age in log terms. Log is helpful to determine the percentage change in something and is more suitable for measuring values related to income, distance and volume. 
@@ -160,7 +164,7 @@ model4 <- lm(INCWAGE ~ AGE + I(AGE^2) + I(AGE^3) + I(AGE^4) +I(AGE^5) + I(AGE^6)
 summary(model4)
 suppressMessages(require(stargazer))
 stargazer(model4, type = "text")
-detach()
+
 
 NNobs <- length(INCWAGE)
 set.seed(12345)
@@ -172,6 +176,7 @@ to_be_predicted4 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic =0, 
 to_be_predicted4$yhat <- predict(model4, newdata = to_be_predicted4)
 
 lines(yhat ~ AGE, data = to_be_predicted4)
+detach()
 ```
 
 Model 4 expands on the conditions of model 2 but this time, the regression model includes age as a polynomial terms where age variable raised by different exponents (2,3,4). Displaying age as a polynomial shows during the predicted analysis that as age increases, wages will increase and flatten out at retirement. If we express the dummy variables in terms of polynomials it will not be effective in the regression because dummy variables are binary and only provide values of zero and one.
@@ -185,7 +190,7 @@ model5 <- lm(log1p(INCWAGE) ~ AGE + I(AGE^2) + I(AGE^3) + I(AGE^4) + educ_hs + e
 summary(model5)
 suppressMessages(require(stargazer))
 stargazer(model5, type = "text")
-detach()
+
 
 NNobs <- length(log1p(INCWAGE))
 set.seed(12345)
@@ -198,6 +203,7 @@ to_be_predicted5 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic=0, A
 to_be_predicted5$yhat <- predict(model5, newdata = to_be_predicted5)
 
 lines(yhat ~ AGE, data = to_be_predicted5)
+detach()
 ```
 
 Model 5 expands on the conditions of model 2 but this time, the regression model is based on log of income wages which is the dependent variable. Since, Log expression is more sutable to simplyfy large numbers like income wages, the log values will be expressed within a smaller range compared to the original values. In our case, there would not be high values for the regression line given that the Log of income ranges between 10 to 11. Similar to the results from Model 2 regression line, the regression slope for Model 5 shows a positive slope as age increases, the income wages also increase but then decreases indicating a diminishing returns for wages as workers reach retirement age (62 years old).
@@ -218,7 +224,7 @@ model6 <- lm(log1p(INCWAGE) ~ + white * AfAm * Hispanic)
 summary(model6)
 suppressMessages(require(stargazer))
 stargazer(model6, type = "text")
-detach()
+
 
 NNobs <- length(log1p(INCWAGE))
 set.seed(12345)
@@ -231,4 +237,5 @@ to_be_predicted5 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic=0, A
 to_be_predicted5$yhat <- predict(model6, newdata = to_be_predicted5)
 
 lines(yhat ~ AGE, data = to_be_predicted5)
+detach()
 ```
