@@ -1,0 +1,234 @@
+---
+title: "Homework 5, Lab 5, Econ B2000"
+author: 'Group: Charles Reid, Christopher Tinevra, Group Members: Akimawe Kadiri, Nicole Kerrison, Mostafa Ragheb,'
+date: "11/3/2020"
+output: github_document
+---
+```{r include=FALSE}
+library(stargazer)
+library(dplyr)
+library(car)
+```
+
+## Model 1: Income Based on Education and Ethnicity
+
+In the subset for model 1, income wages will be estimated depending on
+
+educaltion levels:
+
+* High school degree
+* College degree
+* Advance degree
+
+& ethnicity:
+
+* White
+* African American
+* Hispanics
+
+The sample for this regression includes females with ages ranging from 25 to 65 years old and are currently part of the labor force and are fully employed with (35 hour work week). 
+```{r}
+load("acs2017_ny_data")
+suppressMessages(attach(acs2017_ny))
+use_varb <- (AGE >= 25) & (AGE <= 65) & (LABFORCE == 2) & (WKSWORK2 > 4) & (UHRSWORK >= 35) & (female == 1) 
+dat_use <- subset(acs2017_ny,use_varb)
+detach()
+```
+
+The model will be using a 2nd degree polynomial of the Age parameter
+```{r}
+suppressMessages(attach(dat_use))
+model1 <- lm(INCWAGE ~ AGE + + I(AGE^2) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+summary(model1)
+suppressMessages(require(stargazer))
+stargazer(model1, type = "text")
+detach()
+```
+The regression analysis and coefficients show a positive correlation for income wages as the age increases, a negative effect on wages for those who have high school diplomas only (in comparison to those who have higher levels of education). It also tells researhers that being African American or Hispanics has a negative effect on wages from income. Being white is not a significant indicator of having a high income, HOWEVER the coefficient shows that being white does correlate with having a higher income which may suggest that the model fails to capture some facet that may help whites attain a higher income such as generational wealth, connections etc. 
+
+With an R squared of 0.129, the results of our regression is not completely explained by the predictors included. We can attribute this to 2 reasons:
+
+* The data may not perfectly follwing a linear structure. 
+* In social sciences it is not possible to include all the relevant predictors to explain an outcome variable. This might lead to a lower R2 value.
+A low R squraed can be useful to decide of the model is the best fit for this data. 
+
+From the above regression a predictive model can be drawn using 50% of the data from the 27,192 observations in the data - subset.
+
+```{r}
+NNobs <- length(INCWAGE)
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.5)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(INCWAGE ~ AGE, pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph)
+
+to_be_predicted1 <- data.frame(AGE = 25:65, female = 1,white = 1, Hispanic = 0, AfAm =0, educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted1$yhat <- predict(model1, newdata = to_be_predicted1)
+
+lines(yhat ~ AGE, data = to_be_predicted1)
+initmax <- max(to_be_predicted1$yhat)
+```
+Within the plot for the predicted values the above code pulls out the peak predicted value of `r format(round(initmax, digits = 2), scientific=FALSE)` for INCWAGES.
+
+## Model 2: Adding Polynomial Regression on Age
+
+Model 2 illustrates the linear regression ran above, but with a higher degree polynomial on the Age parameter.
+When higher order polynomials, (Age^3), (Age^4) and (Age^5) etc., to the regression, the absolute values of the corresponding coefficients get progressively smaller. Rsqaured, which was at 0.129 while under a 2nd degree polynomial is now locked at .130 once enter 3rd and greater polynomials(larger numbers where tried), this developement insinuates that while polynomial regression can improve a regression, it may have diminishing returns or other forms of transformation and refinement are needed to help improve the accuracy of this particular subset and its predicting power.
+
+```{r}
+suppressMessages(attach(dat_use))
+model2 <- lm(INCWAGE ~ AGE + I(AGE^2)+ I(AGE^3)+ I(AGE^4)+ I(AGE^5) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+summary(model2)
+suppressMessages(require(stargazer))
+stargazer(model2, type = "text")
+
+NNobs <- length(INCWAGE)
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(INCWAGE ~ AGE, pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph)
+
+to_be_predicted2 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic = 0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted2$yhat <- predict(model2, newdata = to_be_predicted2)
+
+lines(yhat ~ AGE, data = to_be_predicted2)
+
+detach()
+```
+
+The coefficient estimates for Model 2 linear regression continues to demonstrate multiple income wages depending on educaltion level (high school degree, college degree, Advance degree), ethnicity (white, African American & Hispanics) but also taking into consideration age squared. The sample for this regression includes females with ages ranging from 25 to 65 years old and are currently part of the labor force and are fully employed with (35 hour work week). The graph above shows a positive correlation for income wages as the age increases, and regression line refers to the predicted values taking into consideration white females with a college degree. However the regression slope of the graph is positive as age increases, then decreases, indicating diminishing returns for wages as workers reach retirement age (62 years old).
+
+## Model 3: Log and Other Transformations 
+
+Model 3 illustrates the linear regression of income wages based on education level, log of age, log of age squared, and ethnicity.
+
+```{r}
+suppressMessages(attach(dat_use))
+model3 <- lm(INCWAGE ~ log(AGE) + I(log(AGE^2)) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+summary(model3)
+suppressMessages(require(stargazer))
+stargazer(model3, type = "text")
+detach()
+
+NNobs <- length(INCWAGE)
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(INCWAGE ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph)
+
+to_be_predicted3 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic =0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted3$yhat <- predict(model3, newdata = to_be_predicted3)
+
+lines(yhat ~ AGE, data = to_be_predicted3)
+```
+
+Model 3 expands on the conditions of model 1 but this time, the regression model is based on log of age and log of age squared. However, there is no reason to use Log on Age or Log on Age^2 given that age is a discrete variable mostly on intervals between 1 to 100. Log of a given number (x) is the exponent to which another fixed number base (b), must be raised, to produce that number (x). Therefore, it is not practical to present age in log terms. Log is helpful to determine the percentage change in something and is more suitable for measuring values related to income, distance and volume. 
+
+
+
+## Hypothesis Testing joint Significance
+
+Joint significance tests tell whether variables that measure the same information are all insignificant, in this for instance, we can only be sure “AGE” is insignificant in a regression where we used a quadratic form if we test that both “AGE” and “AGE^2” are jointly insignificant. 
+
+under these conditions:
+
+$$ NullHypthesis: Y = AGE_1 + AGE_2 = 0 $$  
+$$ AltHypthesis: Y = AGE_1 or AGE_2 ≠ 0 $$  
+With these set of restrictions on the multiple regression coefficients we can know wether it is or is not insignificant. From running model 2 we know that up to the 2nd level poylnomial refines the model, we will check to see if greater levels (3 and up) are significant or not.  
+
+Compare the p-value for the F-test to significance level.
+
+The output reveals that the F-statistic for this joint hypothesis test is 5.3611 and the corresponding p-value is 0.0206. If the p-value is less than the significance level reject the null hypothesis. in this case 0.0206 less than 0.05 the coresponding significance level so we can reject the idea that AGE^3.. = 0.
+
+
+```{r}
+linearHypothesis(model2, "I(AGE^3) + I(AGE^4) + I(AGE^5) = 0", test="F")
+```
+
+
+
+
+
+Model 4 illustrates the linear regression of income wages based on education level, age, polynomial of ages (Age^exp 2,3,4), and ethnicity.
+
+```{r}
+suppressMessages(attach(dat_use))
+model4 <- lm(INCWAGE ~ AGE + I(AGE^2) + I(AGE^3) + I(AGE^4) +I(AGE^5) + I(AGE^6) + educ_hs + educ_college+ educ_advdeg + white + AfAm + Hispanic)
+
+summary(model4)
+suppressMessages(require(stargazer))
+stargazer(model4, type = "text")
+detach()
+
+NNobs <- length(INCWAGE)
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(INCWAGE ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(0,150000), data = dat_graph)
+to_be_predicted4 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic =0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted4$yhat <- predict(model4, newdata = to_be_predicted4)
+
+lines(yhat ~ AGE, data = to_be_predicted4)
+```
+
+Model 4 expands on the conditions of model 2 but this time, the regression model includes age as a polynomial terms where age variable raised by different exponents (2,3,4). Displaying age as a polynomial shows during the predicted analysis that as age increases, wages will increase and flatten out at retirement. If we express the dummy variables in terms of polynomials it will not be effective in the regression because dummy variables are binary and only provide values of zero and one.
+
+
+Lastly, Model 5 expands on the conditions of model 2 but this time, the regression model is based on log of dependent variable which is income wages. 
+
+```{r}
+suppressMessages(attach(dat_use))
+model5 <- lm(log1p(INCWAGE) ~ AGE + I(AGE^2) + I(AGE^3) + I(AGE^4) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+summary(model5)
+suppressMessages(require(stargazer))
+stargazer(model5, type = "text")
+detach()
+
+NNobs <- length(log1p(INCWAGE))
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(log1p(INCWAGE) ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(10,11), data = dat_graph)
+
+to_be_predicted5 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic=0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted5$yhat <- predict(model5, newdata = to_be_predicted5)
+
+lines(yhat ~ AGE, data = to_be_predicted5)
+```
+
+Model 5 expands on the conditions of model 2 but this time, the regression model is based on log of income wages which is the dependent variable. Since, Log expression is more sutable to simplyfy large numbers like income wages, the log values will be expressed within a smaller range compared to the original values. In our case, there would not be high values for the regression line given that the Log of income ranges between 10 to 11. Similar to the results from Model 2 regression line, the regression slope for Model 5 shows a positive slope as age increases, the income wages also increase but then decreases indicating a diminishing returns for wages as workers reach retirement age (62 years old).
+
+The table below demonstrates the estimates for the coefficient variables for all the models that were run above (Models 1-5). The estimates coefficient values shows an increase of income wages for female workers (either white, hispanics or African American) depending on education level ranging from High school degree to college degree to Advance degree and also taking into consideration age. The reversing the variables is not ideal due to age and education level do not depend on different income wages. 
+
+
+``` {r}
+suppressMessages(require(stargazer))
+stargazer(model1, model2, model3, model4, model5, type = "text")
+```
+## Interaction Terms 
+
+Interaction terms can be added to a model to show different Parameters moving together. It is done by using the * operator. Variables like age, height and time will move together, for instance in age and time you will see a 1 to 1 corellation. For this model all the ethnicity variables will be shown interacting with each other. 
+```{r}
+suppressMessages(attach(dat_use))
+model6 <- lm(log1p(INCWAGE) ~ + white * AfAm * Hispanic)
+summary(model6)
+suppressMessages(require(stargazer))
+stargazer(model6, type = "text")
+detach()
+
+NNobs <- length(log1p(INCWAGE))
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(log1p(INCWAGE) ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(10,11), data = dat_graph)
+
+to_be_predicted5 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic=0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted5$yhat <- predict(model6, newdata = to_be_predicted5)
+
+lines(yhat ~ AGE, data = to_be_predicted5)
+```
