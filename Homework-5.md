@@ -1,7 +1,6 @@
 Homework 5, Lab 5, Econ B2000
 ================
-Group: Charles Reid, Christopher Tinevra, Group Members: Akimawe Kadiri,
-Nicole Kerrison, Mostafa Ragheb,
+Charles Reid
 11/3/2020
 
 ## Model 1: Income Based on Education and Ethnicity
@@ -36,13 +35,13 @@ The model will be using a 2nd degree polynomial of the Age parameter
 
 ``` r
 suppressMessages(attach(dat_use))
-model1 <- lm(INCWAGE ~ AGE + + I(AGE^2) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+model1 <- lm(INCWAGE ~ AGE + I(AGE^2) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
 summary(model1)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = INCWAGE ~ AGE + +I(AGE^2) + educ_hs + educ_college + 
+    ## lm(formula = INCWAGE ~ AGE + I(AGE^2) + educ_hs + educ_college + 
     ##     educ_advdeg + white + AfAm + Hispanic)
     ## 
     ## Residuals:
@@ -143,6 +142,7 @@ From the above regression a predictive model can be drawn using 50% of
 the data from the 27,192 observations in the data - subset.
 
 ``` r
+suppressMessages(attach(dat_use))
 NNobs <- length(INCWAGE)
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.5)
@@ -156,10 +156,11 @@ to_be_predicted1$yhat <- predict(model1, newdata = to_be_predicted1)
 lines(yhat ~ AGE, data = to_be_predicted1)
 ```
 
-![](Homework-5_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](Homework-5_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 initmax <- max(to_be_predicted1$yhat)
+detach()
 ```
 
 Within the plot for the predicted values the above code pulls out the
@@ -180,7 +181,7 @@ the accuracy of this particular subset and its predicting power.
 
 ``` r
 suppressMessages(attach(dat_use))
-model2 <- lm(INCWAGE ~ AGE + I(AGE^2)+ I(AGE^3)+ I(AGE^4)+ I(AGE^5)  + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
+model2 <- lm(INCWAGE ~ AGE + I(AGE^2)+ I(AGE^3)+ I(AGE^4)+ I(AGE^5) + educ_hs + educ_college + educ_advdeg + white + AfAm + Hispanic)
 summary(model2)
 ```
 
@@ -285,7 +286,7 @@ to_be_predicted2$yhat <- predict(model2, newdata = to_be_predicted2)
 lines(yhat ~ AGE, data = to_be_predicted2)
 ```
 
-![](Homework-5_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](Homework-5_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 detach()
@@ -392,7 +393,7 @@ stargazer(model3, type = "text")
 
 ``` r
 detach()
-
+suppressMessages(attach(dat_use))
 NNobs <- length(INCWAGE)
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.1)
@@ -411,7 +412,11 @@ to_be_predicted3$yhat <- predict(model3, newdata = to_be_predicted3)
 lines(yhat ~ AGE, data = to_be_predicted3)
 ```
 
-![](Homework-5_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](Homework-5_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+detach()
+```
 
 Model 3 expands on the conditions of model 1 but this time, the
 regression model is based on log of age and log of age squared. However,
@@ -422,6 +427,49 @@ be raised, to produce that number (x). Therefore, it is not practical to
 present age in log terms. Log is helpful to determine the percentage
 change in something and is more suitable for measuring values related to
 income, distance and volume.
+
+## Hypothesis Testing joint Significance
+
+Joint significance tests tell whether variables that measure the same
+information are all insignificant, in this for instance, we can only be
+sure “AGE” is insignificant in a regression where we used a quadratic
+form if we test that both “AGE” and “AGE^2” are jointly insignificant.
+
+under these conditions:
+
+\[ NullHypthesis: Y = AGE_1 + AGE_2 = 0 \]  
+\[ AltHypthesis: Y = AGE_1 or AGE_2 ≠ 0 \]  
+With these set of restrictions on the multiple regression coefficients
+we can know wether it is or is not insignificant. From running model 2
+we know that up to the 2nd level poylnomial refines the model, we will
+check to see if greater levels (3 and up) are significant or not.
+
+Compare the p-value for the F-test to significance level.
+
+The output reveals that the F-statistic for this joint hypothesis test
+is 5.3611 and the corresponding p-value is 0.0206. If the p-value is
+less than the significance level reject the null hypothesis. in this
+case 0.0206 less than 0.05 the coresponding significance level so we can
+reject the idea that AGE^3.. = 0.
+
+``` r
+linearHypothesis(model2, "I(AGE^3) + I(AGE^4) + I(AGE^5) = 0", test="F")
+```
+
+    ## Linear hypothesis test
+    ## 
+    ## Hypothesis:
+    ## I(AGE^3)  + I(AGE^4)  + I(AGE^5) = 0
+    ## 
+    ## Model 1: restricted model
+    ## Model 2: INCWAGE ~ AGE + I(AGE^2) + I(AGE^3) + I(AGE^4) + I(AGE^5) + educ_hs + 
+    ##     educ_college + educ_advdeg + white + AfAm + Hispanic
+    ## 
+    ##   Res.Df        RSS Df  Sum of Sq      F Pr(>F)  
+    ## 1  27181 9.6941e+13                              
+    ## 2  27180 9.6922e+13  1 1.9117e+10 5.3611 0.0206 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Model 4 illustrates the linear regression of income wages based on
 education level, age, polynomial of ages (Age^exp 2,3,4), and ethnicity.
@@ -525,8 +573,6 @@ stargazer(model4, type = "text")
     ## Note:               *p<0.1; **p<0.05; ***p<0.01
 
 ``` r
-detach()
-
 NNobs <- length(INCWAGE)
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.1)
@@ -539,7 +585,11 @@ to_be_predicted4$yhat <- predict(model4, newdata = to_be_predicted4)
 lines(yhat ~ AGE, data = to_be_predicted4)
 ```
 
-![](Homework-5_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](Homework-5_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+detach()
+```
 
 Model 4 expands on the conditions of model 2 but this time, the
 regression model includes age as a polynomial terms where age variable
@@ -643,8 +693,6 @@ stargazer(model5, type = "text")
     ## Note:               *p<0.1; **p<0.05; ***p<0.01
 
 ``` r
-detach()
-
 NNobs <- length(log1p(INCWAGE))
 set.seed(12345)
 graph_obs <- (runif(NNobs) < 0.1)
@@ -658,7 +706,11 @@ to_be_predicted5$yhat <- predict(model5, newdata = to_be_predicted5)
 lines(yhat ~ AGE, data = to_be_predicted5)
 ```
 
-![](Homework-5_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](Homework-5_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+detach()
+```
 
 Model 5 expands on the conditions of model 2 but this time, the
 regression model is based on log of income wages which is the dependent
@@ -746,3 +798,111 @@ stargazer(model1, model2, model3, model4, model5, type = "text")
     ## F Statistic         505.427*** (df = 8; 27183) 369.619*** (df = 11; 27180) 565.946*** (df = 7; 27184) 338.991*** (df = 12; 27179) 97.839*** (df = 10; 27181)
     ## ============================================================================================================================================================
     ## Note:                                                                                                                            *p<0.1; **p<0.05; ***p<0.01
+
+## Interaction Terms
+
+Interaction terms can be added to a model to show different Parameters
+moving together. It is done by using the \* operator. Variables like
+age, height and time will move together, for instance in age and time
+you will see a 1 to 1 corellation. For this model all the ethnicity
+variables will be shown interacting with each other.
+
+``` r
+suppressMessages(attach(dat_use))
+model6 <- lm(log1p(INCWAGE) ~ + white * AfAm * Hispanic)
+summary(model6)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = log1p(INCWAGE) ~ +white * AfAm * Hispanic)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -10.5585  -0.1483   0.3005   0.7313   3.4187 
+    ## 
+    ## Coefficients: (2 not defined because of singularities)
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)         10.54827    0.03600 292.990  < 2e-16 ***
+    ## white                0.01025    0.03902   0.263   0.7927    
+    ## AfAm                -0.09097    0.04919  -1.849   0.0644 .  
+    ## Hispanic            -0.60083    0.06146  -9.775  < 2e-16 ***
+    ## white:AfAm                NA         NA      NA       NA    
+    ## white:Hispanic       0.42081    0.07983   5.271 1.37e-07 ***
+    ## AfAm:Hispanic        0.54221    0.13359   4.059 4.95e-05 ***
+    ## white:AfAm:Hispanic       NA         NA      NA       NA    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.974 on 27186 degrees of freedom
+    ## Multiple R-squared:  0.005433,   Adjusted R-squared:  0.00525 
+    ## F-statistic:  29.7 on 5 and 27186 DF,  p-value: < 2.2e-16
+
+``` r
+suppressMessages(require(stargazer))
+stargazer(model6, type = "text")
+```
+
+    ## 
+    ## ===============================================
+    ##                         Dependent variable:    
+    ##                     ---------------------------
+    ##                           log1p(INCWAGE)       
+    ## -----------------------------------------------
+    ## white                          0.010           
+    ##                               (0.039)          
+    ##                                                
+    ## AfAm                          -0.091*          
+    ##                               (0.049)          
+    ##                                                
+    ## Hispanic                     -0.601***         
+    ##                               (0.061)          
+    ##                                                
+    ## white:AfAm                                     
+    ##                                                
+    ##                                                
+    ## white:Hispanic               0.421***          
+    ##                               (0.080)          
+    ##                                                
+    ## AfAm:Hispanic                0.542***          
+    ##                               (0.134)          
+    ##                                                
+    ## white:AfAm:Hispanic                            
+    ##                                                
+    ##                                                
+    ## Constant                     10.548***         
+    ##                               (0.036)          
+    ##                                                
+    ## -----------------------------------------------
+    ## Observations                  27,192           
+    ## R2                             0.005           
+    ## Adjusted R2                    0.005           
+    ## Residual Std. Error     1.974 (df = 27186)     
+    ## F Statistic          29.703*** (df = 5; 27186) 
+    ## ===============================================
+    ## Note:               *p<0.1; **p<0.05; ***p<0.01
+
+``` r
+NNobs <- length(log1p(INCWAGE))
+set.seed(12345)
+graph_obs <- (runif(NNobs) < 0.1)
+dat_graph <-subset(dat_use,graph_obs)  
+
+plot(log1p(INCWAGE) ~ (AGE), pch = 16, col = rgb(0.5, 0.5, 0.5, alpha = 0.2), ylim = c(10,11), data = dat_graph)
+
+to_be_predicted5 <- data.frame(AGE = 25:65, female = 1, white = 1, Hispanic=0, AfAm = 0,educ_hs = 0, educ_college = 1, educ_advdeg = 0)
+to_be_predicted5$yhat <- predict(model6, newdata = to_be_predicted5)
+```
+
+    ## Warning in predict.lm(model6, newdata = to_be_predicted5): prediction from a
+    ## rank-deficient fit may be misleading
+
+``` r
+lines(yhat ~ AGE, data = to_be_predicted5)
+```
+
+![](Homework-5_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+detach()
+```
