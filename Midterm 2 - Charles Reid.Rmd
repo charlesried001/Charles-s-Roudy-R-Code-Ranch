@@ -1,0 +1,137 @@
+---
+title: "Mid Term 2"
+author: "Charles"
+date: "11/23/2020"
+output:
+  html_document:
+always_allow_html: yes
+---
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(stargazer)
+library(ggplot2)
+library(asbio)
+library(kableExtra)
+library(lmtest)
+```
+
+## Probability Normal Distribution Plots A-D
+```{r}
+#For a Normal Distribution that has mean 1 and standard deviation 6.5, what is the area to the left of 1.65?
+shade.norm(x=1.65,sigma=6.5,mu=1,tail="lower")
+
+#For a Normal Distribution that has mean 8 and standard deviation 2.7, what is the area in both tails farther from the mean than 13.67?
+shade.norm(x=13.65,sigma=2.7,mu=8,tail="two")
+
+#For a Normal Distribution that has mean -11 and standard deviation 4, what is the area in both tails farther from the mean than -5.4?
+shade.norm(x=-11,sigma=4,mu=-5.4,tail="two")
+
+#For a Normal Distribution that has mean 14 and standard deviation 7.4 what two values leave probability 0.158 in both tails?
+qnorm(0.158/2, 14, 7.4, lower.tail = T)
+qnorm(0.158/2, 14, 7.4, lower.tail = F)
+#Checking to make sure the answer is indeed correct
+1-0.158
+shade.norm(from=3.552457,to=24.44754,sigma=7.4,mu=14,tail="middle")
+```
+## P Values | T - Statistics E - F
+A P-value is an area in the distribution which gives you the probability of getting a value more extreme that what is observed in the data-set. 
+```{r}
+#A regression coefficient is estimated to be equal to 6.56 with standard error 4.1; there are 24 degrees of freedom. What is the p-value (from the t-statistic) against the null hypothesis of zero?
+#Test Statistic
+score              <- -6.56
+standard_error     <-  4.1
+degrees_of_freedom <- 24
+
+T_score <- score / standard_error 
+
+T_score
+
+# P Value 
+pt(-abs(T_score),df = degrees_of_freedom)
+
+#With a P value at 0.06 and a confidence interval of 5% (which is most commonly used ) the P value is a greater probability at 6% therefore we cannot conclude that a significant difference exists. 
+
+#A regression coefficient is estimated to be equal to -0.24 with standard error 0.4; there are 4 degrees of freedom. What is the p-value (from the t-statistic) against the null hypothesis of zero?
+
+score              <- -.24
+standard_error     <-  0.4
+degrees_of_freedom <- 4
+
+T_score <- score / standard_error 
+
+T_score
+
+# P Value 
+pt(-abs(T_score),df = degrees_of_freedom)
+
+#With a P value at 0.30 (rounded up) and a confidence interval of 5% (which is most commonly used ) the P value is a greater probability at 30% therefore we can conclude that a significant difference exists since we have a 30% chance to get results as extreme as what what we saw in the data. 
+```
+
+## Hypothesis Testing 
+```{r}
+#As we consider, “did everything change after March 2020?” look at crude oil prices. The average daily return of crude oil was 0.000145 with standard deviation of 0.0213 in 289 days before March 1. Average daily return after that date was -0.0210 with standard deviation of 0.271 in 174 days after. Is there a statistically significant difference in the mean? Calculate t-stat and p-value for the test against no difference in daily returns
+
+score              <- 0.000145
+degrees_of_freedom <- 288
+n                  <- 289
+stan_dev           <- 0.0213
+standard_error     <- sqrt(n) * stan_dev
+T_score <- score / standard_error 
+
+T_score
+
+pt(-abs(T_score),df = degrees_of_freedom)
+
+```
+
+## Data-Set Manipulation 
+
+(10 points) Create a subgroup of the sample, that makes sense as we focus on the decision of whether to work full time or part time. Explain your rationale:
+
+
+For this subset I will be looking at all genders hours 0 - full time, 0 - 35 (part time) and mature members of the labor force ages 18 - 66 which is measured by the department of labor in their economic calculations of the labor force.
+```{r}
+#The next questions will use the PUMS ACS 2017 NY data
+load("acs2017_ny_data.RData")
+attach(acs2017_ny)
+
+#Given by the variable UHRSWORK. There are 3 broad categories: people who are not in the labor force, those working part time (UHRSWORK > 0 and < 35) and those working full time ( >= 35).
+
+use_varb <- (UHRSWORK >= 0) & (UHRSWORK <= 0:35) & (acs2017_ny$AGE >= 18) & (acs2017_ny$AGE >= 66) & (NCHILD)
+
+data1 <- subset(acs2017_ny, use_varb)
+
+detach()
+
+#Establish categorical levels for each different type of schooling situations.
+
+acs2017_ny$SCHOOL <- as.factor(acs2017_ny$SCHOOL)
+levels(acs2017_ny$SCHOOL) <- c("Yes, in school","No, not in school", "No, not in school", "Missing", "N/A")
+
+#(20 points) Estimate a simple OLS model for hours worked, within your sub sample.
+model1 <- lm(UHRSWORK ~ AGE + I(AGE)^2 + NCHILD + SCHOOL + NCHILD * female, data = data1)
+summary(model1)
+stargazer(model1 , type = "text")
+```
+
+
+#Explain what variables you choose to use as predictors. Do they seem exogenous? Consider whether polynomials in Age are important or interactions with dummy variables.
+I believe the predictors I chose where of solid reasoning. 
+
+*  Age is a factor that should fluctuate with your employability and how much you choose to work.
+*  Having more children may mean you need to stay home and care for them.
+* Being in shcools means you may have to spend more time studying and not working. 
+* We could add other factors like race and education but I believe this is a solid starting point.
+
+#Do your estimates seem plausible? Are the estimates each statistically significant?
+The OLS Model above shows that AGE and SCHOOL status are significant predictors of whether someone is in school or not. Each are significant up to the 99% percent confidence interval. NCHILD was also used to check if the amount of children someone has also has an effect, coupled with it interacting with female to check for reinforce gender rolls and sexism within society. The model found these were not accurate predictors. There may be other factors obscured within the model that can help refine its predicting powers by adding more predictors. Other interactions to consider in the interest of time could be education level and citizen ship status. 
+
+
+
+Construct a joint test of whether a reasonable set of coefficients (such as age polynomials, or education dummies) are all zero.
+```{r}
+
+bptest(model1, ~ AGE + I(AGE)^2 + NCHILD + SCHOOL + NCHILD * female, studentize = TRUE, data = data1)
+
+```
